@@ -1,3 +1,11 @@
+"""
+Author: Dhaivat Jitendra Bhatt
+ID no: 20146667
+Date: 09/02/2020
+Status: Passed all tests on gradescope
+"""
+
+
 import pickle
 import numpy as np
 import gzip
@@ -245,7 +253,7 @@ class NN(object):
 		X_train, y_train = self.train
 		y_onehot = y_train
 		dims = [X_train.shape[1], y_onehot.shape[1]]
-		self.initialize_weights(dims)		
+		self.initialize_weights(dims)
 
 		n_batches = int(np.ceil(X_train.shape[0] / self.batch_size))
 
@@ -269,12 +277,12 @@ class NN(object):
 				## time for updating the parameters
 				self.update(grads)
 
+			print(f"Normalized epoch loss is: {total_epoch_loss / X_train.shape[0]}")
+
 			X_train, y_train = self.train
 			train_loss, train_accuracy, _ = self.compute_loss_and_accuracy(X_train, y_train)
 			X_valid, y_valid = self.valid
 			valid_loss, valid_accuracy, _ = self.compute_loss_and_accuracy(X_valid, y_valid)
-
-			print(f"Epoch : {epoch + 1}/{n_epochs}, loss is: {total_epoch_loss * self.batch_size / X_train.shape[0]}, train_accuracy: {train_accuracy}, validation_accuracy: {valid_accuracy}")
 
 			self.train_logs['train_accuracy'].append(train_accuracy)
 			self.train_logs['validation_accuracy'].append(valid_accuracy)
@@ -288,56 +296,3 @@ class NN(object):
 		test_loss, test_accuracy, _ = self.compute_loss_and_accuracy(X_test, y_test)
 		return test_loss, test_accuracy
 
-
-hidden_dims_list =  [(784, 256), (512, 384), (666, 333), (666,666)]
-epochs = [10]
-activations = ["relu", "sigmoid", "tanh"]
-l_rates = [0.1, 2e-1, 5e-2]
-seed = 500
-batch_size = 512
-
-
-final_stats = []
-stats_dict = {}
-for hidden_dims in hidden_dims_list:
-	for activation in activations:
-		for lr in l_rates:
-			for epoch in epochs:
-				## let's save the stuff
-				stats_dict['hidden_dims'] = hidden_dims
-				stats_dict['lr'] = lr
-				stats_dict['activation'] = activation
-				stats_dict['seed'] = seed
-				stats_dict['batch_size'] = batch_size
-				stats_dict['epoch'] = epoch
-
-				# print("we are here: ", stats_dict)
-
-				nn = NN(hidden_dims=hidden_dims,
-						 epsilon=1e-6,
-						 lr=lr,
-						 batch_size=batch_size,
-						 seed=seed,
-						 activation="relu",
-						 data=load_mnist()
-						 )
-
-				
-
-				out = nn.train_loop(epoch)
-
-				model_params = sum(value.size for _, value in nn.weights.items())
-				print("Total model paramters are: ", model_params)
-
-				stats_dict['train_accuracy'] = out['train_accuracy']
-				stats_dict['validation_accuracy'] = out['validation_accuracy']
-				stats_dict['train_loss'] = out['train_loss']
-				stats_dict['validation_loss'] = out['validation_loss']
-				stats_dict['model_params'] = model_params
-
-				print(f"Train accuracy is: {out['train_accuracy'][len(out['train_accuracy']) - 1]}")
-				print(f"Validation accuracy is: {out['validation_accuracy'][len(out['validation_accuracy']) - 1]}")
-
-				final_stats.append(stats_dict)
-				np.save('hyperparameter_search.npy',np.array(final_stats))
-				stats_dict = {}		
