@@ -28,7 +28,7 @@ for key in output[0].keys():
 plt.legend(loc='center right')
 plt.xlabel('epoch ->')
 plt.ylabel('validation loss -> ')
-plt.title('Training losses for different weight initialization schemes')
+plt.title('Validation losses for different weight initialization schemes')
 plt.savefig('validation_losses.png')
 
 plt.clf()
