@@ -5,6 +5,12 @@ load results stored in numpy file and plot losses.
 Author: Dhaivat Jitendra Bhatt
 UdeM ID: 20146667
 
+How to run?
+
+python plot_losses.py
+
+Check out 2 png files created! 
+
 """
 
 import numpy as np
