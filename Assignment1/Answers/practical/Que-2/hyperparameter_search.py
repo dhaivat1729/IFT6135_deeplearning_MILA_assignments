@@ -318,7 +318,7 @@ for hidden_dims in hidden_dims_list:
 						 lr=lr,
 						 batch_size=batch_size,
 						 seed=seed,
-						 activation="relu",
+						 activation=activation,
 						 data=load_mnist()
 						 )
 
