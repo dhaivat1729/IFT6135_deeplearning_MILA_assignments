@@ -43,3 +43,4 @@ plt.xlabel('epoch ->')
 plt.ylabel('training loss -> ')
 plt.title('Training losses for different weight initialization schemes')
 plt.savefig('train_losses.png')
+

@@ -1,6 +1,8 @@
 import pickle
 import numpy as np
 import gzip
+from copy import deepcopy
+import matplotlib.pyplot as plt
 
 def one_hot(y, n_classes=10):
 	return np.eye(n_classes)[y]
@@ -151,11 +153,16 @@ class NN(object):
 		### Understand from: http://machinelearningmechanic.com/deep_learning/2019/09/04/cross-entropy-loss-derivative.html
 
 		## from one hot encoding to class labels
-		labels = np.argmax(labels, axis=1) 
-
-		dupstream = probs
-		dupstream[range(labels.shape[0]),labels] -= 1
-		dupstream = dupstream/labels.shape[0]
+		if len(labels.shape) == 2:
+			labels = np.argmax(labels, axis=1) 
+			dupstream = probs
+			dupstream[range(labels.shape[0]),labels] -= 1
+			dupstream = dupstream/labels.shape[0]
+		else: 
+			labels = np.argmax(labels)
+			dupstream = probs
+			dupstream[0,labels] -= 1
+			# dupstream = dupstream/labels.shape[0]
 
 		return dupstream
 
@@ -223,12 +230,17 @@ class NN(object):
 		# import ipdb; ipdb.set_trace()
 
 		## from one hot encoding to class labels
-		labels = np.argmax(labels, axis=1) 
+		if len(labels.shape) == 2:
+			labels = np.argmax(labels, axis=1) 
+			## log probabilities of the true class
+			logprobs = -np.log(prediction[range(labels.shape[0]),labels])
 
-		## log probabilities of the true class!
-		logprobs = -np.log(prediction[range(labels.shape[0]),labels])
+			loss = np.sum(logprobs)/labels.shape[0]
+		else: 
+			labels = np.argmax(labels)
+			logprobs = -np.log(prediction[0,labels])
+			loss = np.sum(logprobs)
 
-		loss = np.sum(logprobs)/labels.shape[0]
 
 		return loss
 
@@ -289,55 +301,131 @@ class NN(object):
 		return test_loss, test_accuracy
 
 
-hidden_dims_list =  [(784, 256), (512, 384), (666, 333), (666,666)]
+hidden_dims_list =  [(784, 256)]
 epochs = [10]
-activations = ["relu", "sigmoid", "tanh"]
-l_rates = [5e-2, 1e-2, 5e-3]
-seed = 500
+activations = ["relu"]
+seed = 250
 batch_size = 64
+epoch = 10
+
+nn = NN(hidden_dims=hidden_dims_list[0],
+			epsilon=1e-6,
+			lr=5e-2,
+			batch_size=batch_size,
+			seed=seed,
+			activation="relu",
+			data=load_mnist()
+			)
+
+# out = nn.train_loop(epoch)
+
+data, label = nn.train
+data, label = data[44748].reshape((1,784)), label[44748]
+# data, label = data[20000].reshape((1,784)), label[20000]
+
+nn.train_loop(0)
 
 
-final_stats = []
-stats_dict = {}
-for hidden_dims in hidden_dims_list:
-	for activation in activations:
-		for lr in l_rates:
-			for epoch in epochs:
-				## let's save the stuff
-				stats_dict['hidden_dims'] = hidden_dims
-				stats_dict['lr'] = lr
-				stats_dict['activation'] = activation
-				stats_dict['seed'] = seed
-				stats_dict['batch_size'] = batch_size
-				stats_dict['epoch'] = epoch
+"""
+This is to find the image for which gradient 
+is largest, so that we can have nice gradient values 
+and plots
+"""
+# grad_sum = -50
+# data_point_index = 0
+# for i in range(len(data)):
+	
+# 	data_point, label_point = data[i].reshape((1,784)), label[i]
+	
+# 	output = nn.forward(data_point)
+# 	grads = nn.backward(output, label_point)
+	
+# 	val = np.sum(np.abs(grads['dW2'][0][0:10]))
+# 	if val > grad_sum: # and np.prod(grads['dW2'][0][0:10]) != 0:
+# 		print(val)
+# 		grad_sum = val
+# 		data_point_index = i
 
-				# print("we are here: ", stats_dict)
+# 	# if val 
+# import ipdb; ipdb.set_trace()
 
-				nn = NN(hidden_dims=hidden_dims,
-						 epsilon=1e-6,
-						 lr=lr,
-						 batch_size=batch_size,
-						 seed=seed,
-						 activation=activation,
-						 data=load_mnist()
-						 )
+set_of_N = []
+final_set_N = []
 
-				
+output = nn.forward(data)
+grads = nn.backward(output, label)
 
-				out = nn.train_loop(epoch)
+p = 10  
 
-				model_params = sum(value.size for _, value in nn.weights.items())
-				print("Total model paramters are: ", model_params)
+i_vals = [0,1,2,3,4,5]
+k_vals = [1,5]
 
-				stats_dict['train_accuracy'] = out['train_accuracy']
-				stats_dict['validation_accuracy'] = out['validation_accuracy']
-				stats_dict['train_loss'] = out['train_loss']
-				stats_dict['validation_loss'] = out['validation_loss']
-				stats_dict['model_params'] = model_params
+for k in k_vals:
+	for i in i_vals:
+		set_of_N.append((k)*(10**i))
 
-				print(f"Train accuracy is: {out['train_accuracy'][len(out['train_accuracy']) - 1]}")
-				print(f"Validation accuracy is: {out['validation_accuracy'][len(out['validation_accuracy']) - 1]}")
 
-				final_stats.append(stats_dict)
-				np.save('final_stats.npy',np.array(final_stats))
-				stats_dict = {}		
+## final values of N
+final_set_N = list(np.sort(np.array(set_of_N)))
+
+## let's save copy of gradients and weights
+grad_copy = grads
+weight_copy = deepcopy(nn.weights)
+
+## initialize numerical gradients
+numerical_gradient = np.zeros((p, len(final_set_N)))
+
+## let's calculate finite difference gradient
+for index in range(p):
+	for j, N in enumerate(final_set_N):
+		# print(N)
+		eps = 1.0 / N
+
+		## positive
+		nn.weights['W2'][0][index] += eps
+		pred_probs = nn.forward(data)
+		pos_loss = nn.loss(pred_probs['Z3'], label)
+		nn.weights['W2'] = deepcopy(weight_copy['W2'])
+
+		## negative
+		nn.weights['W2'][0][index] -= eps
+		pred_probs = nn.forward(data)
+		neg_loss = nn.loss(pred_probs['Z3'], label)
+		nn.weights['W2'] = deepcopy(weight_copy['W2'])
+
+		## Approximate Delta
+		numerical_gradient[index][j] = (pos_loss - neg_loss) / (2*eps)
+
+
+## the actual analytical gradient
+grad_W2_10 = grads['dW2'][0][0:10]
+
+## getting in the same shape as numerical gradient
+actual_grad = np.repeat(grad_W2_10[:,np.newaxis],len(final_set_N),axis=-1)
+
+## Finding the finite difference to find numerical gradient
+finite_difference = np.max(actual_grad - numerical_gradient, axis=0)
+
+## csv dump
+import csv
+
+f = open('finite_gradient.csv', 'w')
+out = []
+for i, N in enumerate(final_set_N):
+	row = [N, finite_difference[i]]
+	out.append(row)
+
+with f:
+	writer = csv.writer(f)
+	for row in out:
+		writer.writerow(row)
+
+## let's plot and save this beautiful thing
+
+plt.semilogx(final_set_N, finite_difference,'o-')
+plt.xlabel('N (on log scale) ->')
+plt.ylabel('max grad difference -> ')
+plt.title('Max grad difference between analytical gradient and numerical gradient')
+plt.savefig('finite_difference.png')
+
+import ipdb; ipdb.set_trace()

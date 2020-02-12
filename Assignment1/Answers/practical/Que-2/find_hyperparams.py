@@ -9,7 +9,7 @@ f = open('hyperparams_best.csv', 'w')
 
 rows = []
 for config in hype:
-	if config['validation_accuracy'][9] > 0.97:
+	if config['validation_accuracy'][9] >= 0.97:
 		out = [config['hidden_dims'], config['lr'], config['activation'], config['train_accuracy'][9], config['validation_accuracy'][9], config['model_params']]
 		rows.append(out)
 
