@@ -17,7 +17,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 ## loading the results
-vanilla_CNN = np.load('vanilla_CNN.npy', allow_pickle=True)
+vanilla_CNN = np.load('vanila_CNN.npy', allow_pickle=True)
 
 
 
@@ -32,9 +32,21 @@ plt.savefig('vanilla_CNN_losses.png')
 
 #clear figure
 plt.clf()
+plt.plot(vanilla_CNN[()]['val_accuracy'], 'o-', label=f'validation accuracy')
+plt.plot(vanilla_CNN[()]['train_accuracy'], 'x-', label=f'training accuracy')
+plt.legend(loc='lower right')
+plt.xlabel('epoch ->')
+plt.ylabel('Accuracy value (%) -> ')
+plt.title('Accuracy profile of vanilla CNN (763,094 parameters)')
+plt.savefig('vanilla_CNN_accuracy.png')
+
+
+#clear figure
+plt.clf()
+
 
 vanilla_CNN = np.load('CNN_with_reg.npy', allow_pickle=True)
-
+import ipdb; ipdb.set_trace()
 plt.plot(vanilla_CNN[()]['val_loss'], 'o-', label=f'validation loss')
 plt.plot(vanilla_CNN[()]['train_loss'], 'x-', label=f'training loss')
 plt.legend(loc='upper right')
@@ -42,6 +54,16 @@ plt.xlabel('epoch ->')
 plt.ylabel('loss value -> ')
 plt.title('Loss profile for regularized CNN (763,094 parameters)')
 plt.savefig('CNN_with_reg_losses.png')
+
+plt.clf()
+plt.plot(vanilla_CNN[()]['val_accuracy'], 'o-', label=f'validation accuracy')
+plt.plot(vanilla_CNN[()]['train_accuracy'], 'x-', label=f'training accuracy')
+plt.legend(loc='lower right')
+plt.xlabel('epoch ->')
+plt.ylabel('Accuracy value (%) -> ')
+plt.title('Accuracy profile for regularized CNN (763,094 parameters)')
+plt.savefig('CNN_with_reg_accuracy.png')
+
 
 ## plotting equivalent MLP result
 ## loading the results

@@ -112,10 +112,15 @@ print(params_count)
 
 loss_profile = {}
 train_loss = []
+train_accuracy = []
 val_loss = []
+validation_accuracy = []
 ## let's train the model!
 for epoch in range(10):  # loop over the dataset multiple times
 
+
+	total = 0
+	correct = 0
 	running_loss = 0.0
 	for i, data in enumerate(trainloader, 0):
 		# get the inputs; data is a list of [inputs, labels]
@@ -136,11 +141,18 @@ for epoch in range(10):  # loop over the dataset multiple times
 		# print statistics
 		running_loss += loss.item()
 		print('[%d, %5d] Train loss: %.3f' %(epoch + 1, i + 1, running_loss / (i+1)))
+
+		_, predicted = torch.max(outputs.data, 1)
+		total += labels.size(0)
+		correct += (predicted == labels).sum().item()
 	
 	running_loss = running_loss / len(trainloader)
-
+	train_accuracy.append(100.0 * correct / total)
 	train_loss.append(running_loss)
 
+	total = 0
+	correct = 0
+	
 	running_loss = 0
 
 	for i, data in enumerate(testloader, 0):
@@ -159,7 +171,12 @@ for epoch in range(10):  # loop over the dataset multiple times
 		running_loss += loss.item()
 		print('[%d, %5d] Validation loss: %.3f' %(epoch + 1, i + 1, running_loss / (i+1)))
 
+		_, predicted = torch.max(outputs.data, 1)
+		total += labels.size(0)
+		correct += (predicted == labels).sum().item()
+
 	running_loss = running_loss / len(testloader)
+	validation_accuracy.append(100.0 * correct / total)
 	val_loss.append(running_loss)
 	running_loss = 0.0
 
@@ -183,7 +200,8 @@ print('Accuracy of the network on the 10000 test images: %.5f %%' % (
 
 loss_profile['train_loss'] = train_loss
 loss_profile['val_loss'] = val_loss
-
+loss_profile['train_accuracy'] = train_accuracy
+loss_profile['val_accuracy'] = validation_accuracy
 np.save('vanila_CNN.npy',loss_profile)
 
 import ipdb; ipdb.set_trace()
