@@ -406,6 +406,8 @@ actual_grad = np.repeat(grad_W2_10[:,np.newaxis],len(final_set_N),axis=-1)
 ## Finding the finite difference to find numerical gradient
 finite_difference = np.max(actual_grad - numerical_gradient, axis=0)
 
+import ipdb; ipdb.set_trace()
+
 ## csv dump
 import csv
 
