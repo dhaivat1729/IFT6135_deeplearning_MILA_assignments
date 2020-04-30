@@ -102,7 +102,7 @@ if __name__ == '__main__':
         optim2 = torch.optim.SGD(model2.parameters(), lr=1e-3)
         
         lambda_reg_lp = 50 # Recommended hyper parameters for the lipschitz regularizer.    
-        iterations = 500
+        iterations = 2500
 
         
         for i in range(iterations):
